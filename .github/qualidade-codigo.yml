@@ -1,0 +1,61 @@
+name: "Qualidade de Código"
+
+# Robô de qualidade: descarrega o código do PR/branch, instala as ferramentas
+# e roda Linter + Formatter para TypeScript/JavaScript (frontend) e Python (backend).
+# Qualquer erro de lint ou formatação reprova o PR.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend (ESLint + Prettier)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/georreferenciamento-TOPGEO/frontend
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/georreferenciamento-TOPGEO/frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Linter (ESLint)
+        run: npm run lint
+
+      - name: Formatação (Prettier)
+        run: npm run format:check
+
+  python:
+    name: Python (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Ruff
+        run: pip install ruff
+
+      - name: Linter (Ruff)
+        run: ruff check .
+
+      - name: Formatação (Ruff)
+        run: ruff format --check .
